@@ -1,0 +1,7 @@
+.counter {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    color: var(--paletteColor7);
+    margin-bottom: 10px;
+}
