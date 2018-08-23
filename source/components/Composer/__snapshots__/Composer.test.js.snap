@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Composer component: should render valid markup (Anzyme) snapshot should match 1`] = `"<img src=\\"https://www.avatar.com\\" alt=\\"User avatar\\"><form><textarea placeholder=\\"What&apos;s on your mind, Yevhen\\"></textarea><input type=\\"submit\\" value=\\"Post\\"></form>"`;

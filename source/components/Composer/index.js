@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
-import { string } from 'prop-types';
-import { Consumer } from '../../HOC/withProfile';
+import { string, func } from 'prop-types';
+import { withProfile } from '../../HOC/withProfile';
 import Styles from './styles.m.css';
 
-export default class Composer extends Component {
+export class Composer extends Component {
 
     static propTypes = {
         avatar: string.isRequired,
+        currentUserFirstName: string.isRequired,
+        _createPostAsync: func.isRequired
     }
 
     state = {
@@ -22,14 +24,15 @@ export default class Composer extends Component {
     }
 
     _createPost = () => {
-        const { _createPost } = this.props;
+        const { _createPostAsync } = this.props;
         const { comment } = this.state;
 
         if (!comment.trim()) {
             return (null);
         }
 
-        _createPost(comment);
+        _createPostAsync(comment);
+
         this.setState({
             comment: ''
         });
@@ -54,33 +57,29 @@ export default class Composer extends Component {
     }
 
     render () {
-        const { avatar } = this.props;
+        const { avatar, currentUserFirstName } = this.props;
         const { comment } = this.state;
 
         return (
-            <Consumer>
-                {
-                    (context) => (
-                        <section className = { Styles.composer } >
-                            <img src = { avatar } />
-                            <form
-                                onSubmit = { this._handleFormSubmit }
-                            >
-                                <textarea
-                                    placeholder = {
-                                        `What's on your mind, ${context.currentUserFirstName}`
-                                    }
-                                    value = { comment }
-                                    onChange = { this._handleTeaxtareaChange }
-                                    onCopy = { this._handleTeaxtareaCopy }
-                                    onKeyPress = { this._handleTeaxtareaKeyPress }
-                                />
-                                <input type = 'submit' value = 'Post' />
-                            </form>
-                        </section>
-                    )
-                }
-            </Consumer>
+            <section className = { Styles.composer } >
+                <img src = { avatar } alt = 'User avatar' />
+                <form
+                    onSubmit = { this._handleFormSubmit }
+                >
+                    <textarea
+                        placeholder = {
+                            `What's on your mind, ${ currentUserFirstName }`
+                        }
+                        value = { comment }
+                        onChange = { this._handleTeaxtareaChange }
+                        onCopy = { this._handleTeaxtareaCopy }
+                        onKeyPress = { this._handleTeaxtareaKeyPress }
+                    />
+                    <input type = 'submit' value = 'Post' />
+                </form>
+            </section>
         );
     }
 }
+
+export default withProfile(Composer)

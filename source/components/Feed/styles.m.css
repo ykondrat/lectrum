@@ -1,3 +1,11 @@
+@keyframes spinner {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
 .feed {
     display: flex;
     flex-direction: column;
@@ -8,6 +16,7 @@
     & .postInStart {
         transform: scale(.5);
         opacity: .01;
+        transform: matrix(0, 2, 2, 0, 2, 2);
     }
 
     & .postInEnd {
@@ -15,11 +24,14 @@
         transition: opacity 500ms var(--cubic1),
             transform 500ms var(--cubic1);
         opacity: 1;
+        transform: matrix(1, 0, 0, 1, 0, 0);
     }
 
     & .postOutStart {
         transform: scale(1);
         opacity: 1;
+        position: relative;
+        animation: spinner 1s infinite linear;
     }
 
     & .postOutEnd {
@@ -27,4 +39,6 @@
         transition: opacity 400ms var(--cubic2), transform 400ms var(--cubic2);
         opacity: .01;
     }
+
+
 }
