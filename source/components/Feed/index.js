@@ -14,6 +14,10 @@ import { socket } from '../../socket';
 import gsap from 'gsap';
 import { Transition, CSSTransition, TransitionGroup } from 'react-transition-group';
 
+import { fetchPosts, createPost, deletePost, likePost } from '../../store/actions';
+
+import dispatcher from '../../store/dispatcher';
+import PostsStore from '../../store';
 
 export default class Feed extends Component {
 
@@ -24,12 +28,15 @@ export default class Feed extends Component {
     }
 
     state = {
-        posts: [],
+        posts: PostsStore.getPosts(),
         isSpinning: false
     }
 
     componentDidMount () {
         const { currentUserFirstName, currentUserLastName } = this.props;
+
+        PostsStore.subscibe(this._onChange);
+
         this._fetchPostsAsync();
 
         socket.emit('join', GROUP_ID);
@@ -38,29 +45,36 @@ export default class Feed extends Component {
             const { data: createdPost } = JSON.parse(postJSON);
 
             if (`${currentUserFirstName} ${currentUserLastName}` !== `${createdPost.firstName} ${createdPost.lastName}`) {
-                this.setState(({ posts }) => ({
-                    posts: [createdPost, ...posts]
-                }));
+                dispatcher.dispatch(createPost(createdPost))
             }
         });
         socket.on('remove', (postId) => {
             const { data: { id }, meta } = JSON.parse(postId);
 
             if (`${currentUserFirstName} ${currentUserLastName}` !== `${meta.authorFirstName} ${meta.authorLastName}`) {
-                this.setState(({ posts }) => ({
-                    posts: posts.filter((post) => post.id !== id)
-                }));
+                dispatcher.dispatch(deletePost(id));
             }
         });
         socket.on('like', (post) => {
             const { data: createdPost } = JSON.parse(post);
 
             if (`${currentUserFirstName} ${currentUserLastName}` !== `${createdPost.firstName} ${createdPost.lastName}`) {
-                this.setState(({ posts }) => ({
-                    posts: posts.map((post) => post.id === createdPost.id ? createdPost : post)
-                }));
+                dispatcher.dispatch(likePost(createdPost));
             }
         });
+    }
+
+    componentWillMount() {
+        socket.removeListener('create');
+        socket.removeListener('remove');
+        socket.removeListener('like');
+        PostsStore.unsubscibe(this._onChange);
+    }
+
+    _onChange = () => {
+        this.setState({
+            posts: PostsStore.getPosts()
+        })
     }
 
     _setPostsFetchingState = (isSpinning) => {
@@ -72,12 +86,9 @@ export default class Feed extends Component {
     _fetchPostsAsync = async () => {
         try {
             this._setPostsFetchingState(true);
-
             const posts = await api.fetchPosts();
 
-            this.setState({
-                posts
-            });
+            dispatcher.dispatch(fetchPosts(posts))
         } catch (e) {
             console.error(e);
         } finally {
@@ -88,12 +99,9 @@ export default class Feed extends Component {
     _createPostAsync = async (comment) => {
         try {
             this._setPostsFetchingState(true);
-
             const post = await api.createPost(comment);
 
-            this.setState((prevState) => ({
-                posts: [post, ...prevState.posts]
-            }));
+            dispatcher.dispatch(createPost(post))
         } catch (e) {
             console.error(e);
         } finally {
@@ -104,12 +112,9 @@ export default class Feed extends Component {
     _removePostAsync = async (id) => {
         try {
             this._setPostsFetchingState(true);
-
             await api.removePost(id);
 
-            this.setState(({ posts }) => ({
-                posts: posts.filter((post) => post.id !== id)
-            }));
+            dispatcher.dispatch(deletePost(id));
         } catch (e) {
             console.error(e);
         } finally {
@@ -120,12 +125,9 @@ export default class Feed extends Component {
     _likePostAsync = async (id) => {
         try {
             this._setPostsFetchingState(true);
-
             const likedPost = await api.likePost(id);
 
-            this.setState(({ posts }) => ({
-                posts: posts.map((post) => post.id === likedPost.id ? likedPost : post)
-            }));
+            dispatcher.dispatch(likePost(likedPost));
         } catch (e) {
             console.error(e);
         } finally {
